@@ -5,8 +5,8 @@ except ImportError:
 
 setup(
     name='payment',
-    version='0.00.001.00',
-    packages=['payment'],
+    version='0.00.001.02',
+    packages=['payment', 'payment.amazon', 'payment.paypal'],
     url='http://cosmosframework.com',
     license='MIT License',
     author='Maruf Maniruzzaman',

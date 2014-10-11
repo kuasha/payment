@@ -73,3 +73,26 @@ class LoggedTestCase(unittest.TestCase):
         result = sp.verify_success_return(data, faiuled_url)
         self.failUnlessEqual(result, "VerifyFailed")
         sp.execute_fps.assert_called_once_with('VerifySignature', 'GET', HttpParameters=data, UrlEndPoint=faiuled_url)
+
+    def test_generate_form(self):
+        expected_form = '<form action="https://authorize.payments-sandbox.amazon.com/pba/paypipeline" method="POST">\n' \
+                        '    <input type="image" src="https://authorize.payments.amazon.com/pba/images/payNowButton.png" border="0" />\n' \
+                        '    <input type="hidden" name="signatureVersion" value="2" />\n' \
+                        '    <input type="hidden" name="referenceId" value="123456" />\n' \
+                        '    <input type="hidden" name="returnUrl" value="https://example.com/success/123456" />\n' \
+                        '    <input type="hidden" name="description" value="Test order" />\n' \
+                        '    <input type="hidden" name="collectShippingAddress" value="1" />\n' \
+                        '    <input type="hidden" name="accessKey" value="ADIAJIJL5IWFAQATO2TQ" />\n' \
+                        '    <input type="hidden" name="amount" value="100" />\n' \
+                        '    <input type="hidden" name="signatureMethod" value="HmacSHA256" />\n' \
+                        '    <input type="hidden" name="signature" value="9cL0vgSDoQbSJQRWY1cfN6S4YqpOuACn/ObRgFAoebo=" />\n' \
+                        '    <input type="hidden" name="abandonUrl" value="https://example.com/failed/123456" />\n' \
+                        '</form>\n'
+
+        sp = payment.amazon.simplepay.SimplePay(ACCESS_KEY, SECRET_KEY, REQUEST_URL, FPS_URL)
+        form_inputs = sp.create_form_inputs(100, "Test order", "123456", None, "https://example.com/success/123456",
+                                     "https://example.com/failed/123456", None, None, 1)
+
+        output_form = sp.generate_form(form_inputs, REQUEST_URL)
+        self.failUnlessEqual(output_form, expected_form)
+

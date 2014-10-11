@@ -56,38 +56,19 @@ class SimplePay(Base):
 
         return form_inputs
 
-    @staticmethod
-    def generate_form(form_inputs, request_url):
-        return '<form action="{{ request_url }}" method="POST">' \
-               '    <input type="image" src="https://authorize.payments.amazon.com/pba/images/payNowButton.png" border="0" >' \
-               '    <input type="hidden" name="accessKey" value="{{ accessKey }}" >' \
-               '    <input type="hidden" name="amount" value="{{ amount }}" >' \
-               '    <input type="hidden" name="description" value="{{ description }}" >' \
-               '    <input type="hidden" name="signature" value="{{ signature }}" >' \
-               '    <input type="hidden" name="signatureVersion" value="{{ signatureVersion }}" >' \
-               '    <input type="hidden" name="signatureMethod" value="{{ signatureMethod }}" >' \
-               '    {% if referenceId %}' \
-               '    <input type="hidden" name="referenceId" value="{{ referenceId }}" >' \
-               '    {% endif %}' \
-               '    {%if immediateReturn %}' \
-               '    <input type="hidden" name="immediateReturn" value="{{ immediateReturn }}" >' \
-               '    {% endif %}' \
-               '    {%if returnUrl %}' \
-               '    <input type="hidden" name="returnUrl" value="{{ returnUrl }}" >' \
-               '    {% endif %}' \
-               '    {%if abandonUrl %}' \
-               '    <input type="hidden" name="abandonUrl" value="{{ abandonUrl }}" >' \
-               '    {% endif %}' \
-               '    {%if processImmediate %}' \
-               '    <input type="hidden" name="processImmediate" value="{{ processImmediate }}" >' \
-               '    {% endif %}' \
-               '    {%if ipnUrl %}' \
-               '    <input type="hidden" name="ipnUrl" value="{{ ipnUrl }}" >' \
-               '    {% endif %}' \
-               '    {%if collectShippingAddress %}' \
-               '    <input type="hidden" name="collectShippingAddress" value="{{ collectShippingAddress }}" >' \
-               '    {% endif %}' \
-               '</form>'
+    def generate_form(self, form_inputs, request_url):
+        assert isinstance(form_inputs, dict)
+        inputs = ['<input type="image" src="https://authorize.payments.amazon.com/pba/images/payNowButton.png" border="0" />']
+
+        for key in form_inputs.keys():
+            value = form_inputs[key]
+            if value:
+                inputs.append('<input type="hidden" name="{0}" value="{1}" />'.format(key, value))
+
+        inputs_str = "\n    ".join(inputs)
+        form_str = '<form action="{0}" method="POST">\n    '.format(request_url) + inputs_str + '\n</form>\n'
+
+        return form_str
 
     def verify_success_return(self, data, success_url):
         """
