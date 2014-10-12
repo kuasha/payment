@@ -96,3 +96,61 @@ class LoggedTestCase(unittest.TestCase):
         output_form = sp.generate_form(form_inputs, REQUEST_URL)
         self.failUnlessEqual(output_form, expected_form)
 
+    def test_prepare_params(self):
+        sp = payment.amazon.simplepay.SimplePay(ACCESS_KEY, SECRET_KEY, REQUEST_URL, FPS_URL)
+
+        params = {
+            "CallerDescription": "CallerDescription",
+            "CallerReference": "CallerReference",
+            "RefundAmount.CurrencyCode": "USD",
+            "RefundAmount.Value": 1,
+            "TransactionId": "14GK6F2QU755ODS27SGHEURLKPG72Z54KMF"
+        }
+
+        values = sp.prepare_params("Refund", "GET", params)
+        del values['Timestamp']
+        del values['Signature']
+
+        expected_result = {'SignatureVersion': 2,
+                           'AWSAccessKeyId': ACCESS_KEY,
+                           'SignatureMethod': 'HmacSHA256',
+                           'Version': '2008-09-17',
+                           'Action': 'Refund'
+                           }
+        expected_result.update(values)
+
+        self.failUnlessEqual(values, expected_result)
+
+    def test_refund(self):
+
+        success_return = '<RefundResponse xmlns="http://fps.amazonaws.com/doc/2008-09-17/">' \
+                         '  <RefundResult>' \
+                         '    <TransactionId>14GK6F2QU755ODS27SGHEURLKPG72Z54KMF</TransactionId>' \
+                         '    <TransactionStatus>Pending</TransactionStatus>' \
+                         '  </RefundResult>' \
+                         '  <ResponseMetadata>' \
+                         '    <RequestId>1a146b9a-b37b-4f5f-bda6-012a5b9e45c3:0</RequestId>' \
+                         '  </ResponseMetadata>' \
+                         '</RefundResponse>'
+
+        sp = payment.amazon.simplepay.SimplePay(ACCESS_KEY, SECRET_KEY, REQUEST_URL, FPS_URL)
+
+        sp.execute_fps = MagicMock(name='execute_fps', return_value=success_return)
+
+        params = {
+            "CallerDescription": "CallerDescription",
+            "CallerReference": "CallerReference",
+            "RefundAmount.CurrencyCode": "USD",
+            "RefundAmount.Value": 1,
+            "TransactionId": "14GK6F2QU755ODS27SGHEURLKPG72Z54KMF"
+        }
+
+        result = sp.refund(params["CallerDescription"], params["CallerReference"], params["RefundAmount.CurrencyCode"],
+                           params["RefundAmount.Value"], params["TransactionId"])
+
+        self.failUnlessEqual(result, success_return)
+        sp.execute_fps.assert_called_once_with('Refund', 'GET', params)
+
+
+if __name__ == "__main__":
+    unittest.main()

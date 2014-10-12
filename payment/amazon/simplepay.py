@@ -86,11 +86,7 @@ class SimplePay(Base):
 
         return "Success"
 
-    def execute_fps(self, action, method, **params):
-        """
-        Make a request against the FPS api.
-        """
-
+    def prepare_params(self, action, method, params):
         values = {"AWSAccessKeyId": self.access_key,
                   "SignatureMethod": "HmacSHA256",
                   "SignatureVersion": 2,
@@ -99,6 +95,14 @@ class SimplePay(Base):
                   "Action": action}
         values.update(params)
         values["Signature"] = self.generate_signature(self.secret_key, method, values, self.FPS_URL)
+        return values
+
+    def execute_fps(self, action, method, **params):
+        """
+        Make a request against the FPS api.
+        """
+
+        values = self.prepare_params(action, method, params)
         url = "%s?%s" % (self.FPS_URL, urllib.urlencode(values))
         request = urllib2.Request(url)
         try:
@@ -122,6 +126,21 @@ class SimplePay(Base):
         xml = ET.XML(response)
         el = xml.find(".//{http://fps.amazonaws.com/doc/2008-09-17/}VerificationStatus")
         return el is not None and el.text == "Success"
+
+    def refund(self, CallerDescription, CallerReference, RefundAmount_CurrencyCode, RefundAmount_Value, TransactionId):
+
+        params = {
+            "CallerDescription": CallerDescription,
+            "CallerReference": CallerReference,
+            "RefundAmount.CurrencyCode": RefundAmount_CurrencyCode,
+            "RefundAmount.Value": RefundAmount_Value,
+            "TransactionId": TransactionId
+        }
+
+        return self._do_refund(params)
+
+    def _do_refund(self, params):
+        return self.execute_fps("Refund", "GET", params)
 
     @staticmethod
     def generate_signature(secret_key, verb, values, request_url):
