@@ -5,7 +5,7 @@ import unittest
 import payment.amazon.simplepay
 
 ACCESS_KEY = "ADIAJIJL5IWFAQATO2TQ"
-SECRET_KEY = "8A+aOofm5w01gBHjWAYR56Sx9XFgReW12DzjrlDi"
+SECRET_KEY = "8A+aOofm5w01gBHjWAYR56Sx9XFgReW12DzjrlDi" # Fake for testing - don't try
 REQUEST_URL = "https://authorize.payments-sandbox.amazon.com/pba/paypipeline"
 FPS_URL = "https://fps.sandbox.amazonaws.com/"
 
